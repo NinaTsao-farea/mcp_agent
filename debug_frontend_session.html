@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>前端 Session 檢查工具</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+        }
+        .label {
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        .value {
+            font-family: 'Courier New', monospace;
+            background: #fff;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            word-break: break-all;
+            margin-bottom: 10px;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+        .status.ok {
+            background: #4CAF50;
+            color: white;
+        }
+        .status.error {
+            background: #f44336;
+            color: white;
+        }
+        .status.warning {
+            background: #ff9800;
+            color: white;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 前端 Session 檢查工具</h1>
+        
+        <div class="section">
+            <div class="label">1️⃣ 認證 Session ID (localStorage)</div>
+            <div class="value" id="auth-session">檢查中...</div>
+            <div id="auth-status"></div>
+        </div>
+        
+        <div class="section">
+            <div class="label">2️⃣ 續約 Session ID (localStorage)</div>
+            <div class="value" id="renewal-session">檢查中...</div>
+            <div id="renewal-status"></div>
+        </div>
+        
+        <div class="section">
+            <div class="label">3️⃣ 所有 localStorage 內容</div>
+            <pre id="all-storage"></pre>
+        </div>
+        
+        <div class="section">
+            <div class="label">4️⃣ 所有 sessionStorage 內容</div>
+            <pre id="session-storage"></pre>
+        </div>
+        
+        <div class="section">
+            <div class="label">5️⃣ 測試 API 連線</div>
+            <button onclick="testAPI()">測試連線</button>
+            <div id="api-result"></div>
+        </div>
+        
+        <div class="section">
+            <button onclick="location.reload()">🔄 重新檢查</button>
+            <button onclick="clearAllSessions()">🗑️ 清除所有 Session</button>
+        </div>
+    </div>
+
+    <script>
+        // 檢查認證 Session
+        const authSessionId = localStorage.getItem('session_id');
+        const authSessionEl = document.getElementById('auth-session');
+        const authStatusEl = document.getElementById('auth-status');
+        
+        if (authSessionId) {
+            authSessionEl.textContent = authSessionId;
+            if (authSessionId.startsWith('session_S')) {
+                authStatusEl.innerHTML = '<span class="status ok">✓ 格式正確</span>';
+            } else {
+                authStatusEl.innerHTML = '<span class="status warning">⚠ 格式可能不正確（應該是 session_S001_...）</span>';
+            }
+        } else {
+            authSessionEl.textContent = '(無)';
+            authStatusEl.innerHTML = '<span class="status error">✗ 未找到認證 Session</span>';
+        }
+        
+        // 檢查續約 Session
+        const renewalSessionId = localStorage.getItem('renewal_session_id');
+        const renewalSessionEl = document.getElementById('renewal-session');
+        const renewalStatusEl = document.getElementById('renewal-status');
+        
+        if (renewalSessionId) {
+            renewalSessionEl.textContent = renewalSessionId;
+            if (renewalSessionId.startsWith('renewal_STAFF')) {
+                renewalStatusEl.innerHTML = '<span class="status ok">✓ 格式正確</span>';
+            } else {
+                renewalStatusEl.innerHTML = '<span class="status warning">⚠ 格式可能不正確（應該是 renewal_STAFF001_...）</span>';
+            }
+        } else {
+            renewalSessionEl.textContent = '(無)';
+            renewalStatusEl.innerHTML = '<span class="status error">✗ 未找到續約 Session</span>';
+        }
+        
+        // 顯示所有 localStorage
+        const allStorage = {};
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            allStorage[key] = localStorage.getItem(key);
+        }
+        document.getElementById('all-storage').textContent = JSON.stringify(allStorage, null, 2);
+        
+        // 顯示所有 sessionStorage
+        const allSessionStorage = {};
+        for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            allSessionStorage[key] = sessionStorage.getItem(key);
+        }
+        document.getElementById('session-storage').textContent = JSON.stringify(allSessionStorage, null, 2);
+        
+        // 測試 API
+        async function testAPI() {
+            const resultEl = document.getElementById('api-result');
+            resultEl.innerHTML = '<div style="margin-top: 10px;">測試中...</div>';
+            
+            if (!authSessionId) {
+                resultEl.innerHTML = '<div class="status error" style="margin-top: 10px;">✗ 缺少認證 Session ID</div>';
+                return;
+            }
+            
+            if (!renewalSessionId) {
+                resultEl.innerHTML = '<div class="status error" style="margin-top: 10px;">✗ 缺少續約 Session ID</div>';
+                return;
+            }
+            
+            const url = `http://localhost:8000/api/renewal-workflow/chat/stream?session_id=${authSessionId}&renewal_session_id=${renewalSessionId}&message=測試連線`;
+            
+            try {
+                const eventSource = new EventSource(url);
+                
+                let hasResponse = false;
+                
+                eventSource.onmessage = (event) => {
+                    hasResponse = true;
+                    resultEl.innerHTML = `
+                        <div class="status ok" style="margin-top: 10px;">✓ 連線成功</div>
+                        <div style="margin-top: 10px;">收到訊息：</div>
+                        <pre>${event.data}</pre>
+                    `;
+                    eventSource.close();
+                };
+                
+                eventSource.onerror = (error) => {
+                    if (!hasResponse) {
+                        resultEl.innerHTML = `
+                            <div class="status error" style="margin-top: 10px;">✗ 連線失敗</div>
+                            <pre>錯誤: ${JSON.stringify(error, null, 2)}</pre>
+                            <div style="margin-top: 10px;">請確認：</div>
+                            <ul>
+                                <li>後端服務器是否運行在 http://localhost:8000</li>
+                                <li>Session ID 是否有效</li>
+                                <li>是否已到達 Step 5（select_device_type）</li>
+                            </ul>
+                        `;
+                    }
+                    eventSource.close();
+                };
+                
+                // 10 秒超時
+                setTimeout(() => {
+                    if (!hasResponse) {
+                        resultEl.innerHTML = '<div class="status error" style="margin-top: 10px;">✗ 連線超時（10秒）</div>';
+                        eventSource.close();
+                    }
+                }, 10000);
+                
+            } catch (error) {
+                resultEl.innerHTML = `
+                    <div class="status error" style="margin-top: 10px;">✗ 發生錯誤</div>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+        
+        // 清除所有 Session
+        function clearAllSessions() {
+            if (confirm('確定要清除所有 Session 嗎？這將會登出並清除續約流程。')) {
+                localStorage.clear();
+                sessionStorage.clear();
+                alert('已清除所有 Session');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
