@@ -1,6 +1,8 @@
 <template>
   <div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-6">
+      <!-- 主要內容區域 -->
+      <div class="flex-1 max-w-5xl">
       <!-- 麵包屑導航 -->
       <nav class="mb-6 text-sm">
         <ol class="flex items-center space-x-2 text-gray-500">
@@ -144,6 +146,18 @@
           <span>下一步：選擇手機</span>
           <UIcon name="i-heroicons-arrow-right" class="w-5 h-5 ml-2" />
         </UButton>
+      </div>
+      </div>
+      
+      <!-- AI 聊天框側邊欄 -->
+      <div class="w-96 flex-shrink-0">
+        <div class="sticky top-8">
+          <AIChatBox 
+            v-if="renewalSessionId"
+            :session-id="renewalSessionId"
+            :disabled="workflowLoading"
+          />
+        </div>
       </div>
     </div>
   </div>

@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-6">
+    <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-6">
       <!-- 主要內容區域 -->
       <div class="flex-1 max-w-5xl">
       <!-- 麵包屑導航 -->

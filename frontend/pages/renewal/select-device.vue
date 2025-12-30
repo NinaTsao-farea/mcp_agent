@@ -1,15 +1,35 @@
 <template>
   <div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-6">
+      <!-- 主要內容區域 -->
+      <div class="flex-1 max-w-7xl">
       <!-- Breadcrumb -->
       <nav class="mb-6">
         <ol class="flex items-center space-x-2 text-sm text-gray-500">
-          <li>續約流程</li>
-          <li><i class="i-heroicons-chevron-right-solid w-4 h-4" /></li>
-          <li>選擇裝置類型</li>
-          <li><i class="i-heroicons-chevron-right-solid w-4 h-4" /></li>
-          <li>選擇作業系統</li>
-          <li><i class="i-heroicons-chevron-right-solid w-4 h-4" /></li>
+          <li>
+            <NuxtLink to="/renewal/start" class="hover:text-primary-600 transition-colors">
+              續約流程
+            </NuxtLink>
+          </li>
+          <li><UIcon name="i-heroicons-chevron-right" class="w-4 h-4" /></li>
+          <li>
+            <NuxtLink to="/renewal/select-phone" class="hover:text-primary-600 transition-colors">
+              資格檢查
+            </NuxtLink>
+          </li>
+          <li><UIcon name="i-heroicons-chevron-right" class="w-4 h-4" /></li>
+          <li>
+            <NuxtLink to="/renewal/select-device-type" class="hover:text-primary-600 transition-colors">
+              選擇續約方式
+            </NuxtLink>
+          </li>
+          <li><UIcon name="i-heroicons-chevron-right" class="w-4 h-4" /></li>
+          <li>
+            <NuxtLink to="/renewal/select-device-os" class="hover:text-primary-600 transition-colors">
+              選擇作業系統
+            </NuxtLink>
+          </li>
+          <li><UIcon name="i-heroicons-chevron-right" class="w-4 h-4" /></li>
           <li class="text-primary-600 font-medium">選擇裝置</li>
         </ol>
       </nav>
@@ -238,6 +258,19 @@
           <UIcon name="i-heroicons-arrow-right" class="w-5 h-5 ml-2" />
         </UButton>
       </div>
+      </div>
+      
+      <!-- AI 聊天框側邊欄 -->
+      <div class="w-96 flex-shrink-0">
+        <div class="sticky top-8">
+          <AIChatBox 
+            v-if="sessionId"
+            :session-id="sessionId"
+            :page-context="pageContext"
+            :disabled="workflowLoading"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -295,6 +328,35 @@ const filteredDevices = computed(() => {
   }
 
   return filtered
+})
+
+// 生成頁面上下文給 AI
+const pageContext = computed(() => {
+  if (filteredDevices.value.length === 0) {
+    return '目前頁面：選擇裝置\n\n暫無可用的裝置資料。'
+  }
+  
+  const deviceList = filteredDevices.value.map((device, index) => {
+    return `${index + 1}. ${device.brand} ${device.model}
+   - 作業系統: ${device.os}
+   - 處理器: ${device.processor}
+   - 儲存空間: ${device.storage}
+   - 螢幕尺寸: ${device.screen_size}
+   - 專案價: NT$ ${device.contract_price?.toLocaleString()}
+   - 原價: NT$ ${device.original_price?.toLocaleString()}
+   - 庫存狀態: ${stockStatusText(device.stock_status)}
+   - 可用庫存: ${device.available} 台`
+  }).join('\n\n')
+  
+  return `目前頁面：選擇裝置
+當前篩選條件：品牌=${selectedBrand.value === 'all' ? '全部' : selectedBrand.value}, 價格範圍=${selectedPriceRange.value === 'all' ? '全部' : selectedPriceRange.value}
+
+以下是目前顯示的 ${filteredDevices.value.length} 款裝置清單：
+
+${deviceList}
+
+---
+請根據以上裝置清單回答用戶的問題。`
 })
 
 // Methods

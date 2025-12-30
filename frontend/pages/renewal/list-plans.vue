@@ -1,17 +1,45 @@
 <template>
   <div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-6">
+      <!-- 主要內容區域 -->
+      <div class="flex-1 max-w-7xl">
       <!-- Breadcrumb -->
       <nav class="mb-6">
         <ol class="flex items-center space-x-2 text-sm text-gray-500">
-          <li>續約流程</li>
-          <li><i class="i-heroicons-chevron-right-solid w-4 h-4" /></li>
-          <li>選擇裝置類型</li>
-          <li><i class="i-heroicons-chevron-right-solid w-4 h-4" /></li>
-          <li>選擇作業系統</li>
-          <li><i class="i-heroicons-chevron-right-solid w-4 h-4" /></li>
-          <li>選擇裝置</li>
-          <li><i class="i-heroicons-chevron-right-solid w-4 h-4" /></li>
+          <li>
+            <NuxtLink to="/renewal/start" class="hover:text-primary-600 transition-colors">
+              續約流程
+            </NuxtLink>
+          </li>
+          <li><UIcon name="i-heroicons-chevron-right" class="w-4 h-4" /></li>
+          <li>
+            <NuxtLink to="/renewal/select-phone" class="hover:text-primary-600 transition-colors">
+              資格檢查
+            </NuxtLink>
+          </li>
+          <li><UIcon name="i-heroicons-chevron-right" class="w-4 h-4" /></li>
+          <li>
+            <NuxtLink to="/renewal/select-device-type" class="hover:text-primary-600 transition-colors">
+              選擇續約方式
+            </NuxtLink>
+          </li>
+          <li v-if="sessionData?.customer_selection?.device_type !== 'none'">
+            <UIcon name="i-heroicons-chevron-right" class="w-4 h-4" />
+          </li>
+          <li v-if="sessionData?.customer_selection?.device_type !== 'none'">
+            <NuxtLink to="/renewal/select-device-os" class="hover:text-primary-600 transition-colors">
+              選擇作業系統
+            </NuxtLink>
+          </li>
+          <li v-if="sessionData?.customer_selection?.device_type !== 'none'">
+            <UIcon name="i-heroicons-chevron-right" class="w-4 h-4" />
+          </li>
+          <li v-if="sessionData?.customer_selection?.device_type !== 'none'">
+            <NuxtLink to="/renewal/select-device" class="hover:text-primary-600 transition-colors">
+              選擇裝置
+            </NuxtLink>
+          </li>
+          <li><UIcon name="i-heroicons-chevron-right" class="w-4 h-4" /></li>
           <li class="text-primary-600 font-medium">選擇方案</li>
         </ol>
       </nav>
@@ -212,6 +240,19 @@
           </UButton>
         </div>
       </div>
+      </div>
+      
+      <!-- AI 聊天框側邊欄 -->
+      <div class="w-96 flex-shrink-0">
+        <div class="sticky top-8">
+          <AIChatBox 
+            v-if="sessionId"
+            :session-id="sessionId"
+            :page-context="pageContext"
+            :disabled="workflowLoading"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -283,6 +324,37 @@ const filteredPlans = computed(() => {
   }
 
   return filtered
+})
+
+// 生成頁面上下文給 AI
+const pageContext = computed(() => {
+  if (filteredPlans.value.length === 0) {
+    return '目前頁面：選擇方案\n\n暫無可用的方案資料。'
+  }
+  
+  const planList = filteredPlans.value.map((plan, index) => {
+    const gifts = plan.gifts && plan.gifts.length > 0 ? plan.gifts.join('、') : '無'
+    const promotion = plan.promotion_title ? `\n   - 促銷活動: ${plan.promotion_title}` : ''
+    
+    return `${index + 1}. ${plan.name}
+   - 月租費: NT$ ${plan.monthly_fee}
+   - 合約期數: ${plan.contract_months} 個月
+   - 數據流量: ${plan.data}
+   - 語音通話: ${plan.voice}
+   - 簡訊: ${plan.sms || '不限'}
+   - 贈品: ${gifts}${promotion}
+   - ${plan.is_recommended ? '⭐ 推薦方案' : ''}`
+  }).join('\n\n')
+  
+  return `目前頁面：選擇方案
+當前篩選條件：價格範圍=${selectedPriceRange.value === 'all' ? '全部' : priceRangeOptions.find(o => o.value === selectedPriceRange.value)?.label}, 流量範圍=${selectedDataRange.value === 'all' ? '全部' : dataRangeOptions.find(o => o.value === selectedDataRange.value)?.label}
+
+以下是目前顯示的 ${filteredPlans.value.length} 個方案清單：
+
+${planList}
+
+---
+請根據以上方案清單回答用戶的問題。如果用戶想比較方案，請使用 compare_plans 函數。`
 })
 
 // Methods

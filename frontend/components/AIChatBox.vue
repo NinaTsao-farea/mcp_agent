@@ -107,10 +107,12 @@ import ChatMessage from './ChatMessage.vue'
 interface Props {
   sessionId: string
   disabled?: boolean
+  pageContext?: string  // 頁面上下文，會自動附加到訊息前
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  disabled: false
+  disabled: false,
+  pageContext: undefined
 })
 
 // AI Chat Composable
@@ -150,7 +152,8 @@ async function handleSend() {
   const message = inputMessage.value.trim()
   inputMessage.value = ''
   
-  await sendMessage(props.sessionId, message)
+  // 將頁面上下文作為參數傳遞，但不顯示在對話記錄中
+  await sendMessage(props.sessionId, message, props.pageContext)
   
   // 滾動到底部
   scrollToBottom()

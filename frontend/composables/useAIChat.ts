@@ -40,8 +40,11 @@ export function useAIChat() {
   
   /**
    * 發送訊息並接收 AI 回答（SSE 串流）
+   * @param sessionId 續約流程 Session ID
+   * @param message 用戶訊息（原始問題，不含上下文）
+   * @param pageContext 可選的頁面上下文（只發送給後端，不顯示在對話中）
    */
-  async function sendMessage(sessionId: string, message: string) {
+  async function sendMessage(sessionId: string, message: string, pageContext?: string) {
     if (!message.trim()) {
       return
     }
@@ -50,14 +53,19 @@ export function useAIChat() {
     error.value = null
     tokenUsage.value = null
     
-    // 添加使用者訊息
+    // 添加使用者訊息（只顯示原始問題，不包含上下文）
     const userMessageId = `user-${Date.now()}`
     messages.value.push({
       id: userMessageId,
       role: 'user',
-      content: message,
+      content: message,  // 只顯示用戶的原始問題
       timestamp: new Date()
     })
+    
+    // 實際發送給後端的訊息（包含上下文）
+    const messageWithContext = pageContext 
+      ? `${pageContext}\n\n用戶問題: ${message}`
+      : message
     
     // 添加 AI 訊息（載入中）
     currentMessageId = `assistant-${Date.now()}`
@@ -87,13 +95,15 @@ export function useAIChat() {
       const url = new URL('/api/renewal-workflow/chat/stream', baseURL)
       url.searchParams.set('session_id', authSessionId)  // 認證 Session ID
       url.searchParams.set('renewal_session_id', sessionId)  // 續約流程 Session ID
-      url.searchParams.set('message', message)
+      url.searchParams.set('message', messageWithContext)  // 發送包含上下文的完整訊息
       
       // 調試日誌
       console.log('[AI Chat] 發送請求:', {
         authSessionId,
         renewalSessionId: sessionId,
-        message,
+        userMessage: message,  // 用戶原始問題
+        hasContext: !!pageContext,  // 是否有上下文
+        fullMessage: messageWithContext.substring(0, 200) + '...',  // 完整訊息預覽
         url: url.toString()
       })
       
