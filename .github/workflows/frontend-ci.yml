@@ -28,6 +28,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        
+      
+      # 1) 安裝 pnpm（推薦）
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4        
+        with:
+          # 若你的 package.json 有 "packageManager": "pnpm@x.y.z"
+          # 可以省略 version，由 action 讀取；否則建議明確指定版本
+          version: 10 
 
       - name: Setup Node.js ${{ matrix.node }}
         uses: actions/setup-node@v4
