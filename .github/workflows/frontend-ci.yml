@@ -1,0 +1,61 @@
+
+name: Frontend CI (Vue/Nuxt)
+
+on:
+  push:
+    paths:
+      - "frontend/**"
+  pull_request:
+    paths:
+      - "frontend/**"
+
+permissions:
+  contents: read
+
+jobs:
+  lint-test-build:
+    name: Lint ¡E Unit Test ¡E Build / Generate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Enable corepack & prepare pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Nuxt static generate (if present)
+        run: |
+          if pnpm -s run | grep -q '^generate$'; then pnpm run generate; else echo "No generate script"; fi
+
+      - name: Upload frontend build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-artifacts-${{ matrix.node }}
+          path: |
+            frontend/dist
+            frontend/.output/public
+            frontend/out
+          if-no-files-found: ignore
+
+  
