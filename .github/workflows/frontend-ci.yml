@@ -2,7 +2,17 @@
 name: Frontend CI (Vue/Nuxt)
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  
+    inputs:
+      target:
+        description: "Select which generate script to run"
+        type: choice
+        required: true
+        default: "user"
+        options:
+          - user
+          - admin
+    
   push:
     paths:
       - "frontend/**"
@@ -25,6 +35,7 @@ jobs:
       fail-fast: false
       matrix:
         node: [22]
+        target: [user, admin]
 
     steps:
       - name: Checkout repository
@@ -51,20 +62,27 @@ jobs:
           corepack prepare pnpm@latest --activate
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile      
       
+      #- name: Nuxt static generate
+      #  working-directory: frontend
+      #  run: pnpm run generate
       
-      - name: Nuxt static generate
+      # 依 target 執行對應 generate 腳本
+      - name: Run generate by target
         working-directory: frontend
-        run: pnpm run generate
-
+        run: |
+          case "${{ matrix.target }}" in
+            user)    pnpm run generate:user ;;
+            admin)   pnpm run generate:admin ;;
+          esac
+      
       - name: Upload frontend build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4        
         with:
-          name: frontend-artifacts-${{ matrix.node }}
+          name: nuxt-static-${{ matrix.target }}-node${{ matrix.node }}
           path: |
             frontend/.output/public
-            frontend/dist
-          if-no-files-found: warn   # 或改成 error 直接讓 CI 失敗
+          if-no-files-found: error
 
   
