@@ -62,9 +62,8 @@ jobs:
         with:
           name: frontend-artifacts-${{ matrix.node }}
           path: |
-            frontend/dist
-            frontend/.output/public
-            frontend/out
-          if-no-files-found: ignore
+            dist
+            .output/public
+          if-no-files-found: warn   # 或改成 error 直接讓 CI 失敗
 
   
