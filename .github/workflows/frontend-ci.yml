@@ -2,6 +2,7 @@
 name: Frontend CI (Vue/Nuxt)
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - "frontend/**"
