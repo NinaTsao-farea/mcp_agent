@@ -52,10 +52,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Nuxt static generate (if present)
-        run: |
-          if pnpm -s run | grep -q '^generate$'; then pnpm run generate; else echo "No generate script"; fi
+      
+      - name: Nuxt static generate
+        run: nuxt generate
 
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@v4
