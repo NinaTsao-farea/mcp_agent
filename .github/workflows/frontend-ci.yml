@@ -3,15 +3,15 @@ name: Frontend CI (Vue/Nuxt)
 
 on:
   workflow_dispatch:  
-    inputs:
-      target:
-        description: "Select which generate script to run"
-        type: choice
-        required: true
-        default: "user"
-        options:
-          - user
-          - admin
+    #inputs:
+    #  target:
+    #    description: "Select which generate script to run"
+    #    type: choice
+    #    required: true
+    #    default: "user"
+    #    options:
+    #      - user
+    #      - admin
     
   push:
     paths:
@@ -64,18 +64,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile      
       
-      #- name: Nuxt static generate
-      #  working-directory: frontend
-      #  run: pnpm run generate
+      - name: Nuxt static generate
+        working-directory: frontend
+        run: pnpm run generate
       
       # 依 target 執行對應 generate 腳本
-      - name: Run generate by target
-        working-directory: frontend
-        run: |
-          case "${{ matrix.target }}" in
-            user)    pnpm run generate:user ;;
-            admin)   pnpm run generate:admin ;;
-          esac
+      #- name: Run generate by target
+      #  run: |
+      #    case "${{ matrix.target }}" in
+      #      user)    pnpm run generate:user ;;
+      #      admin)   pnpm run generate:admin ;;
+      #    esac
       
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@v4        
