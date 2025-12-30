@@ -35,7 +35,7 @@ jobs:
       fail-fast: false
       matrix:
         node: [22]
-        target: [user, admin]
+        #target: [user, admin]
 
     steps:
       - name: Checkout repository
@@ -79,7 +79,7 @@ jobs:
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@v4        
         with:
-          name: nuxt-static-${{ matrix.target }}-node${{ matrix.node }}
+          name: nuxt-static-node${{ matrix.node }}  #nuxt-static-${{ matrix.target }}-node${{ matrix.node }}
           path: |
             frontend/.output/public
           if-no-files-found: error
