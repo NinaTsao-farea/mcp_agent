@@ -28,8 +28,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-        
+        uses: actions/checkout@v4        
       
       # 1) ¦w¸Ë pnpm¡]±ÀÂË¡^
       - name: Setup pnpm
@@ -54,8 +53,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       
+      
       - name: Nuxt static generate
-        run: nuxt generate
+        working-directory: frontend
+        run: pnpm run generate
 
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@v4
